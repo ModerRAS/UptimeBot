@@ -1,0 +1,15 @@
+services:
+  - docker
+
+language: generic
+
+script:
+  - docker build -t moderras/uptimebotserver:nightly-$(date +%F) -f ./Dockerfile.server .
+  - docker build -t moderras/uptimebotserver:latest -f ./Dockerfile.server .
+  - docker build -t moderras/uptimebotclient:nightly-$(date +%F) -f ./Dockerfile.client .
+  - docker build -t moderras/uptimebotclient:latest -f ./Dockerfile.client .
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker push moderras/uptimebotserver:nightly-$(date +%F)
+  - docker push moderras/uptimebotserver:latest
+  - docker push moderras/uptimebotclient:nightly-$(date +%F)
+  - docker push moderras/uptimebotclient:latest
