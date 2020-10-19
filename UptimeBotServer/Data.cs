@@ -7,5 +7,6 @@ namespace UptimeBotServer {
     public class Data {
         public string NodeName { get; set; }
         public DateTime DateTime { get; set; }
+        public bool IsUp { get; set; }
     }
 }

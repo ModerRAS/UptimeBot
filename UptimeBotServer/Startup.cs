@@ -13,6 +13,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
+using UptimeBotServer.Services;
 
 namespace UptimeBotServer {
     public class Startup {
@@ -29,7 +30,9 @@ namespace UptimeBotServer {
             services.AddSingleton<ITelegramBotClient>(
                 sp => string.IsNullOrEmpty(Env.HttpProxy) ? 
                 new TelegramBotClient(Env.BotToken) : 
-                new TelegramBotClient(Env.BotToken, new WebProxy(Env.HttpProxy)));
+                new TelegramBotClient(Env.BotToken, new WebProxy(Env.HttpProxy))
+                );
+            services.AddTransient<BotService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -38,8 +41,7 @@ namespace UptimeBotServer {
                 app.UseDeveloperExceptionPage();
             }
             Global.Status = new Dictionary<string, Data>();
-            var bot = app.ApplicationServices.GetRequiredService<ITelegramBotClient>();
-            bot.StartReceiving();
+            app.ApplicationServices.GetRequiredService<ITelegramBotClient>().StartReceiving();
             app.UseRouting();
 
             app.UseAuthorization();
@@ -52,14 +54,8 @@ namespace UptimeBotServer {
                     var now = DateTime.UtcNow;
                     foreach (var e in Global.Status) {
                         if (e.Value.DateTime.AddMinutes(5) < now) {
-                            var ErrorMessage = $"节点 {e.Key} 疑似离线超过5分钟";
-                            Console.WriteLine(ErrorMessage);
-                            await bot.SendTextMessageAsync(
-                                chatId: Env.AdminId,
-                                disableNotification: true,
-                                parseMode: ParseMode.Markdown,
-                                text: ErrorMessage
-                                );
+                            e.Value.IsUp = false;
+                            await app.ApplicationServices.GetRequiredService<BotService>().DeviceDown(e.Key);
                         }
                     }
                 }).EveryFiveMinutes();

@@ -15,6 +15,7 @@ namespace UptimeBotClient {
     class Data {
         public string NodeName { get; set; }
         public DateTime DateTime { get; set; }
+        public bool IsUp { get; set; }
     }
     class Program {
         public static async Task<string> CrawlString(string url, HttpClient client) {
@@ -26,7 +27,8 @@ namespace UptimeBotClient {
                         JsonConvert.SerializeObject(
                             new Data {
                                 NodeName = Env.NodeName,
-                                DateTime = DateTime.UtcNow
+                                DateTime = DateTime.UtcNow,
+                                IsUp = true
                             }));
                     request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
                     request.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3");
